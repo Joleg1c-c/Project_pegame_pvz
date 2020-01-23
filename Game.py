@@ -3,7 +3,9 @@ import sys
 import os
 import random
 
-FPS = 60
+# берёт значения FPS из текставого файла
+take_snach = open("text/settings.txt", encoding='utf8').read().split()
+FPS = int(take_snach[2])
 
 
 def load_image(name, colorkey=None):
@@ -487,7 +489,7 @@ class Help:
 
     def render(self):
         # карта
-        screen.blit(pygame.transform.scale(load_image("fon.jpg"), (width - self.left * 2, height - self.top * 2)),
+        screen.blit(pygame.transform.scale(load_image("s1200 (2).jpg"), (width - self.left * 2, height - self.top * 2)),
                     (self.left, self.top))
 
         # обьяснение
@@ -743,6 +745,26 @@ while running_menu:
     pygame.display.flip()
     clock.tick(FPS)
 
+# проверка на то, запускается ли эта игра впервые
+if int(take_snach[5]) == 0:
+    perezapic = open('text/settings.txt', 'w', encoding='utf8')
+    perezapic.write("FPS = {}\nSTART = {}".format(take_snach[2], 1))
+    perezapic.close()
+    Fail = True
+    while Fail:
+        screen.fill((0, 0, 0))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                Fail = False
+        font = pygame.font.Font(None, 70)
+        text = font.render("Приятной игры)", 1, (255, 255, 255))
+        screen.blit(text, (60, 150))
+        pygame.display.flip()
+        clock.tick(FPS)
+
 # стоимость защитников
 shop_defender = {None: 10000, "defender_standart": 4, "defender_pollen_given": 2, "defender_stend": 2, "potions": 0,
                  "defender_slower": 7}
@@ -806,9 +828,6 @@ while running:
         else:
             move(i, "left")
 
-    # # проверка на смерть защитников
-    # death(defenders, "def")
-
     # ход защитников
     for i in defenders:
         # проверка на смерть защитников
@@ -858,6 +877,5 @@ while running:
     choice_board.render()
     board.render()
     all_sprites.draw(screen)
-    # Mouse_sprite.draw(screen)
     pygame.display.flip()
     clock.tick(FPS)
