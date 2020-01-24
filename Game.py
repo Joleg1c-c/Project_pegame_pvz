@@ -673,7 +673,7 @@ def monster_spavn():
     tipe = random.choice(monsters_tipe)
     image = spisok_monsters_image[tipe]
 
-    monster = Monster(random.randint(12, 14) + random.randint(1, 9) * 0.1, random.randint(0, 4), image)
+    monster = Monster(random.randint(14, 16) + random.randint(1, 9) * 0.1, random.randint(0, 4), image)
     monsters.append(monster)
     monster.pererab(spisok_monsters_tipe[tipe])
 
