@@ -25,6 +25,8 @@ class Monster(pygame.sprite.Sprite):
         super().__init__(Monster_group, all_sprites)
         self.pos = (pos_x, pos_y)
         self.const = (pos_x, pos_y)
+        # проигрыш
+        self.game_over = 0
         # эффекс заморозки
         self.cold = 0
         # скорость передвижения
@@ -50,6 +52,10 @@ class Monster(pygame.sprite.Sprite):
         self.accum_speed = spisok[1]
         self.xp = spisok[2]
         self.power = spisok[3]
+
+    # проверка на проигрыш
+    def game_over(self):
+        return self.game_over
 
     def damage(self, xp):
         self.xp -= xp
@@ -84,8 +90,7 @@ class Monster(pygame.sprite.Sprite):
         self.stand_x += speed * self.kof_speed * self.pos[0] * f
         self.rect = self.image.get_rect().move(self.stand_x, self.stand_y)
         if self.stand_x < 0:
-            monster_spavn()
-            self.kill()
+            self.game_over = 1
 
 
 class Defender(pygame.sprite.Sprite):
@@ -377,7 +382,7 @@ class Game_menu:
         # подсвечины ли они
         self.tipe = [0, 0, 0]
         # размеры
-        self.size_menu = {"Играть": (233, 70), "Помощь": (365, 70), "Выход": (240, 70)}
+        self.size_menu = {"Играть": (170, 70), "Помощь": (200, 70), "Выход": (170, 70)}
         # значения по умолчанию
         self.left = 10
         self.top = 10
@@ -439,8 +444,79 @@ class Game_menu:
                 text = font.render(self.menu[j], 1, (110, 110, 110))
             screen.blit(text, (self.left, self.top + j * self.cell_size))
 
-            # pygame.draw.rect(screen, (255, 255, 255),
-            #                  [self.left, j * self.cell_size + self.top, 365, 70], 1)
+
+class Difficult:
+    # создание игрового поля
+    def __init__(self, height):
+        self.height = height
+        # проверка на то, находится ли там кто-то
+        self.state = []
+        # типы штук в меню
+        self.menu = ["Нормально", "Сложно"]
+        # подсвечины ли они
+        self.tipe = [0, 0]
+        # размеры
+        self.size_menu = {"Нормально": (390, 70), "Сложно": (280, 70)}
+        # значения по умолчанию
+        self.left = 10
+        self.top = 10
+        self.cell_size = 30
+
+    # настройка внешнего вида
+    def set_view(self, left, top, cell_size):
+        self.left = left
+        self.top = top
+        self.cell_size = cell_size
+
+    # что именно выбрали
+    def what(self, number):
+        if number != None:
+            return self.menu[number]
+
+    # подсвечивает выбранную
+    def light(self, number):
+        if number != None:
+            self.tipe[number] = 1
+        else:
+            self.tipe = [0, 0]
+
+    # обработка клика
+    def get_click(self, mouse_pos):
+        cell = self.get_cell(mouse_pos)
+        if cell != None:
+            return self.on_click(cell)
+
+    def on_click(self, cell_coords):
+        return cell_coords[-1]
+
+    def get_cell(self, cell_coords):
+        s = []
+
+        for j in range(self.height):
+            if self.left + self.size_menu[self.menu[j]][0] > cell_coords[0] > self.left:
+                s.append(1)
+            if j * self.cell_size + self.top + self.size_menu[self.menu[j]][1] > cell_coords[
+                1] > j * self.cell_size + self.top:
+                s.append(j)
+            if len(s) > 1:
+                break
+            else:
+                s = []
+
+        if len(s) < 2:
+            return None
+        else:
+            return s
+
+    def render(self):
+        for j in range(self.height):
+            # кнопки
+            font = pygame.font.Font(None, 100)
+            if self.tipe[j]:
+                text = font.render(self.menu[j], 1, (255, 255, 255))
+            else:
+                text = font.render(self.menu[j], 1, (110, 110, 110))
+            screen.blit(text, (self.left, self.top + j * self.cell_size))
 
 
 class Help:
@@ -449,7 +525,7 @@ class Help:
         self.height = height
         self.width = width
         # размеры
-        self.size_klava = (205, 70)
+        self.size_klava = (150, 70)
         # подсветка
         self.tipe_lifgt = 0
         # значения по умолчанию
@@ -553,19 +629,17 @@ def death(spisok, id=None):
 
 
 def move(hero, mov):
-    # x, y = hero.pos
-    x, y = 1, 2
     if mov == "up":
-        hero.move(x, y - 1)
+        hero.move(0, -1)
 
     if mov == "down":
-        hero.move(x, y + 1)
+        hero.move(0, 1)
 
     if mov == "left":
-        hero.move(-1, y)
+        hero.move(-1, 0)
 
     if mov == "right":
-        hero.move(1, y)
+        hero.move(1, 0)
 
 
 # спавн защитника
@@ -599,7 +673,7 @@ def monster_spavn():
     tipe = random.choice(monsters_tipe)
     image = spisok_monsters_image[tipe]
 
-    monster = Monster(random.randint(14, 16) + random.randint(1, 9) * 0.1, random.randint(0, 4), image)
+    monster = Monster(random.randint(12, 14) + random.randint(1, 9) * 0.1, random.randint(0, 4), image)
     monsters.append(monster)
     monster.pererab(spisok_monsters_tipe[tipe])
 
@@ -617,7 +691,7 @@ pygame.init()
 size = width, height = 500, 400
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
-pygame.display.set_caption("Крутая игра")
+pygame.display.set_caption("The Insurrection")
 sound1 = pygame.mixer.Sound('data/Utopia Close.wav')
 
 # группы спрайтов
@@ -625,6 +699,7 @@ all_sprites = pygame.sprite.Group()
 Bullet_group = pygame.sprite.Group()
 Defender_group = pygame.sprite.Group()
 Monster_group = pygame.sprite.Group()
+end_game = pygame.sprite.Group()
 
 # поле 5 на 7
 board = Game_board(8, 5)
@@ -695,6 +770,7 @@ while running_menu:
             running_menu = False
 
         if event.type == pygame.MOUSEBUTTONDOWN:
+            # обрабатывает клики
             if start_glav_menu:
                 kto_menu = board_menu.get_click(event.pos)
 
@@ -722,6 +798,7 @@ while running_menu:
                     start_help = False
 
         if event.type == pygame.MOUSEMOTION:
+            # подсвечивает при касании
             if start_glav_menu:
                 board_menu.light(None)
                 kto_menu = board_menu.get_click(event.pos)
@@ -745,12 +822,48 @@ while running_menu:
     pygame.display.flip()
     clock.tick(FPS)
 
+# выбор сложности
+Diff = Difficult(2)
+Diff.set_view(10, 100, 100)
+diffic = "Нормально"
+choice_diff = True
+while choice_diff:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            choice_diff = False
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            kto_menu = Diff.get_click(event.pos)
+
+            if Diff.what(kto_menu) == "Нормально":
+                sound1.play()
+                diffic = "Нормально"
+                choice_diff = False
+
+            elif Diff.what(kto_menu) == "Сложно":
+                sound1.play()
+                diffic = "Сложно"
+                choice_diff = False
+
+        if event.type == pygame.MOUSEMOTION:
+            Diff.light(None)
+            kto_menu = Diff.get_click(event.pos)
+            if kto_menu != None:
+                Diff.light(kto_menu)
+
+    screen.fill((0, 0, 0))
+    Diff.render()
+    pygame.display.flip()
+    clock.tick(FPS)
+
 # проверка на то, запускается ли эта игра впервые
-if int(take_snach[5]) == 0:
+if int(take_snach[5]) == 0 and running:
     perezapic = open('text/settings.txt', 'w', encoding='utf8')
     perezapic.write("FPS = {}\nSTART = {}".format(take_snach[2], 1))
     perezapic.close()
     Fail = True
+    x = height
+    # заставка
     while Fail:
         screen.fill((0, 0, 0))
         for event in pygame.event.get():
@@ -759,9 +872,10 @@ if int(take_snach[5]) == 0:
                 sys.exit()
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 Fail = False
-        font = pygame.font.Font(None, 70)
-        text = font.render("Приятной игры)", 1, (255, 255, 255))
-        screen.blit(text, (60, 150))
+        screen.fill((0, 0, 0))
+        screen.blit(load_image("s1200 (2) — копия.jpg"), (0, x))
+        x -= 0.3
+
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -769,17 +883,21 @@ if int(take_snach[5]) == 0:
 shop_defender = {None: 10000, "defender_standart": 4, "defender_pollen_given": 2, "defender_stend": 2, "potions": 0,
                  "defender_slower": 7}
 
-# defender_stend
 # список с классоми защитников, пули, монстрами
 defenders = []
 bullets = []
 monsters = []
 
+# спавн зомби
+sp = {"Нормально": 10, "Сложно": 20}
 f = 7
-for i in range(20):
+for i in range(sp[diffic]):
     monster_spavn()
 
+over = False
 defen = None
+defen_pro = None
+stop = True
 while running:
     screen.fill((0, 0, 0))
     for event in pygame.event.get():
@@ -787,8 +905,9 @@ while running:
             running = False
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_position = event.pos
-            defen_pro = choice_board.get_click(mouse_position)
+            if stop:
+                mouse_position = event.pos
+                defen_pro = choice_board.get_click(mouse_position)
 
             if choice_board.hou_pollen() >= shop_defender[defen_pro] and defen != defen_pro:
                 choice_board.sero(event.pos[0])
@@ -809,73 +928,112 @@ while running:
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
-                defenders[-1].damage(100)
+                stop = True
             if event.key == pygame.K_DOWN:
-                monsters[0].damage(100)
+                stop = False
 
-    # ход монстров
-    for i in monsters:
-        if i not in all_sprites:
-            monsters.remove(i)
+    if stop:
+        # ход монстров
+        for i in monsters:
+            if i not in all_sprites:
+                monsters.remove(i)
 
-        defender_popalsja = hurt(i, defenders, "mon", "def")
-        if defender_popalsja != None:
-            # готовность ударить зомби
-            gotovnpst = i.accumulation()
-            if gotovnpst:
-                defenders[defenders.index(defender_popalsja)].damage(i.hit())
+            defender_popalsja = hurt(i, defenders, "mon", "def")
+            if defender_popalsja != None:
+                # готовность ударить зомби
+                gotovnpst = i.accumulation()
+                if gotovnpst:
+                    defenders[defenders.index(defender_popalsja)].damage(i.hit())
 
-        else:
-            move(i, "left")
+            else:
+                move(i, "left")
+                if i.game_over:
+                    over = True
+                    break
+        if over:
+            break
 
-    # ход защитников
-    for i in defenders:
-        # проверка на смерть защитников
-        if i not in all_sprites:
-            board.delate(i.check()[2])
-            defenders.remove(i)
+        # ход защитников
+        for i in defenders:
+            # проверка на смерть защитников
+            if i not in all_sprites:
+                board.delate(i.check()[2])
+                defenders.remove(i)
 
-        if i.tipe() == "pollen":
-            i.accumulation()
-
-        elif i.tipe() == "bullet_standart" or i.tipe() == "ice":
-            somebody = common_line(i, monsters)
-            if somebody != None:
+            if i.tipe() == "pollen":
                 i.accumulation()
 
-    # пуля ход и попадание
-    for i in bullets:
-        # проверка на смерть пули
-        if i not in all_sprites:
-            Bullet_group.remove(i)
-            bullets.remove(i)
+            elif i.tipe() == "bullet_standart" or i.tipe() == "ice":
+                somebody = common_line(i, monsters)
+                if somebody != None:
+                    i.accumulation()
 
-        if i.tipe() == "defender_stend":
-            continue
+        # пуля ход и попадание
+        for i in bullets:
+            # проверка на смерть пули
+            if i not in all_sprites:
+                Bullet_group.remove(i)
+                bullets.remove(i)
 
-        elif i.tipe() == "pollen":
-            if click(mouse_position, i):
-                choice_board.take_pollen()
-                i.kill()
+            if i.tipe() == "defender_stend":
+                continue
 
-        elif i.tipe() == "ice":
-            move(i, "right")
-            monst_popalsja = hurt(i, monsters, "but", "mon")
-            if monst_popalsja != None:
-                monsters[monsters.index(monst_popalsja)].damage(i.hit())
-                monsters[monsters.index(monst_popalsja)].freezing()
-                i.kill()
+            elif i.tipe() == "pollen":
+                if click(mouse_position, i):
+                    choice_board.take_pollen()
+                    i.kill()
 
-        elif i.tipe() == "bullet_standart":
-            move(i, "right")
-            monst_popalsja = hurt(i, monsters, "but", "mon")
-            if monst_popalsja != None:
-                monsters[monsters.index(monst_popalsja)].damage(i.hit())
-                i.kill()
+            elif i.tipe() == "ice":
+                move(i, "right")
+                monst_popalsja = hurt(i, monsters, "but", "mon")
+                if monst_popalsja != None:
+                    monsters[monsters.index(monst_popalsja)].damage(i.hit())
+                    monsters[monsters.index(monst_popalsja)].freezing()
+                    i.kill()
+
+            elif i.tipe() == "bullet_standart":
+                move(i, "right")
+                monst_popalsja = hurt(i, monsters, "but", "mon")
+                if monst_popalsja != None:
+                    monsters[monsters.index(monst_popalsja)].damage(i.hit())
+                    i.kill()
 
     mouse_position = (-1, -1)
     choice_board.render()
     board.render()
     all_sprites.draw(screen)
+    if stop == False:
+        screen.blit(pygame.transform.scale(load_image("pause.png", -1), (250, 250)), (90, 70))
+
     pygame.display.flip()
     clock.tick(FPS)
+
+if over:
+    sprite = pygame.sprite.Sprite()
+    sprite.image = pygame.transform.scale(load_image("game.jpg"), (500, 400))
+    sprite.rect = sprite.image.get_rect()
+    end_game.add(sprite)
+    sprite.rect.x = -500
+    sprite.rect.y = 0
+
+    MYEVENTTYPE = 30
+    pygame.time.set_timer(MYEVENTTYPE, 10)
+
+    cx = 2
+    running_over = True
+    while running_over:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running_over = False
+            if event.type == MYEVENTTYPE:
+                sprite.rect.x += cx
+            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                running_over = False
+
+        if sprite.rect.x >= 0:
+            cx = 0
+        choice_board.render()
+        board.render()
+        all_sprites.draw(screen)
+        end_game.draw(screen)
+        pygame.display.flip()
