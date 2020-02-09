@@ -39,7 +39,12 @@ class Monster(pygame.sprite.Sprite):
         self.accum = 0
         # скорость удара
         self.accum_speed = 5
-        self.image = pygame.transform.scale(load_image(image, -1), (hero_width, hero_height))
+        # анимация движения
+        self.now = 0
+        self.now_hit = 0
+        self.image_list_move = image[0]
+        self.image_list_hit = image[1]
+        self.image = pygame.transform.scale(load_image(self.image_list_move[self.now % 4], -1), (hero_width, hero_height))
         self.stand_x = tile_left + tile_width * pos_x + 10
         self.stand_y = tile_top + tile_height * pos_y + 10
 
@@ -59,8 +64,9 @@ class Monster(pygame.sprite.Sprite):
 
     def damage(self, xp):
         self.xp -= xp
+        pygame.mixer.music.load('data/splat.mp3')
+        pygame.mixer.music.play()
         if self.xp <= 0:
-            monster_spavn()
             self.kill()
 
     # замедляет монстра
@@ -75,6 +81,10 @@ class Monster(pygame.sprite.Sprite):
 
     # накопление энергии для удара
     def accumulation(self):
+        self.now_hit += 1
+        if self.now_hit % 8 == 0:
+            self.image = pygame.transform.scale(load_image(self.image_list_hit[(self.now_hit // 8) % 4], -1),
+                                                (hero_width, hero_height))
         self.accum += self.accum_speed
         if self.accum >= 100:
             self.accum = 0
@@ -87,6 +97,10 @@ class Monster(pygame.sprite.Sprite):
         f = 1
         if self.cold > 0:
             f = 0.5
+        self.now += 1
+        if self.now % 8 == 0:
+            self.image = pygame.transform.scale(load_image(self.image_list_move[(self.now // 8) % 4], -1),
+                                                (hero_width, hero_height))
         self.stand_x += speed * self.kof_speed * self.pos[0] * f
         self.rect = self.image.get_rect().move(self.stand_x, self.stand_y)
         if self.stand_x < 0:
@@ -128,6 +142,8 @@ class Defender(pygame.sprite.Sprite):
     def damage(self, xp):
         self.xp -= xp
         if self.xp <= 0:
+            pygame.mixer.music.load('data/gulp.mp3')
+            pygame.mixer.music.play()
             self.kill()
 
     # накопление энергии для выстрела
@@ -206,6 +222,8 @@ class Choice_board:
 
     # подсвечивает выбранное поле и убирает подсветку у других полей
     def red(self, coor):
+        pygame.mixer.music.load('data/buzzer.mp3')
+        pygame.mixer.music.play()
         self.board = [[0] * self.width for _ in range(self.height)]
         if coor != None:
             for i in range(self.width):
@@ -224,6 +242,8 @@ class Choice_board:
 
     def take_pollen(self):
         self.col_vo_pollen += 1
+        pygame.mixer.music.load('data/chime.mp3')
+        pygame.mixer.music.play()
 
     def buy_za_pollen(self, hoy):
         self.col_vo_pollen -= hoy
@@ -330,6 +350,8 @@ class Game_board:
             if cell_coords in self.state:
                 for i in defenders:
                     if list(i.check()[2]) == cell_coords:
+                        pygame.mixer.music.load('data/shovel.mp3')
+                        pygame.mixer.music.play()
                         i.kill()
 
         elif cell_coords not in self.state:
@@ -565,7 +587,7 @@ class Help:
 
     def render(self):
         # карта
-        screen.blit(pygame.transform.scale(load_image("s1200 (2).jpg"), (width - self.left * 2, height - self.top * 2)),
+        screen.blit(pygame.transform.scale(load_image("fon.jpg"), (width - self.left * 2, height - self.top * 2)),
                     (self.left, self.top))
 
         # обьяснение
@@ -673,7 +695,7 @@ def monster_spavn():
     tipe = random.choice(monsters_tipe)
     image = spisok_monsters_image[tipe]
 
-    monster = Monster(random.randint(14, 16) + random.randint(1, 9) * 0.1, random.randint(0, 4), image)
+    monster = Monster(random.randint(10, 12) + random.randint(1, 9) * 0.1, random.randint(0, 4), image)
     monsters.append(monster)
     monster.pererab(spisok_monsters_tipe[tipe])
 
@@ -731,9 +753,10 @@ spisok_defenders_image = {"defender_standart": "defender_standart.png",
 monsters_tipe = ["monster_standart", "monster_standart", "monster_standart", "monster_speed", "monster_standart",
                  "monster_speed", "monster_easy_tank"]
 
-spisok_monsters_image = {"monster_standart": "monster_standart.png",
-                         "monster_speed": "monster_fast.png",
-                         "monster_easy_tank": "monster_easy_tank.png"}
+spisok_monsters_image = {
+    "monster_standart": [['11.jpg', '12.jpg', '13.jpg', '14.jpg'], ['21.jpg', '22.jpg', '23.jpg', '24.jpg']],
+    "monster_speed": [['31.jpg', '32.jpg', '33.jpg', '34.jpg'], ['41.jpg', '42.jpg', '43.jpg', '44.jpg']],
+    "monster_easy_tank": [['51.jpg', '52.jpg', '53.jpg', '54.jpg'], ['61.jpg', '62.jpg', '63.jpg', '64.jpg']]}
 
 # пули
 spisok_bullen_image = {"bullet_standart": "bullet_standart.png", "pollen": "pollen.png",
@@ -761,7 +784,7 @@ board_menu.set_view(10, 50, 70)
 help = Help()
 help.set_view(10, 70)
 
-start_glav_menu, start_help, choice_diff = True, False, False
+start_glav_menu, start_help = True, False
 running_menu = True
 running = False
 while running_menu:
@@ -782,7 +805,6 @@ while running_menu:
                     sound1.play()
                     running_menu = False
                     running = True
-                    choice_diff = True
 
                 elif board_menu.what(kto_menu) == "Помощь":
                     sound1.play()
@@ -827,11 +849,11 @@ while running_menu:
 Diff = Difficult(2)
 Diff.set_view(10, 100, 100)
 diffic = "Нормально"
+choice_diff = True
 while choice_diff:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             choice_diff = False
-            running = False
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             kto_menu = Diff.get_click(event.pos)
@@ -882,20 +904,21 @@ if int(take_snach[5]) == 0 and running:
 
 # стоимость защитников
 shop_defender = {None: 10000, "defender_standart": 4, "defender_pollen_given": 2, "defender_stend": 2, "potions": 0,
-                 "defender_slower": 7}
+                 "defender_slower": 6}
 
 # список с классоми защитников, пули, монстрами
 defenders = []
 bullets = []
 monsters = []
 
-# спавн зомби
-sp = {"Нормально": 10, "Сложно": 20}
-f = 7
-for i in range(sp[diffic]):
-    monster_spavn()
 
-over = False
+
+# настройки спавна зомби
+cd_zom_sp = 100
+zom_sp = 0.125
+kol_waves = 3
+
+over, win = False, False
 defen = None
 defen_pro = None
 stop = True
@@ -913,6 +936,8 @@ while running:
             if choice_board.hou_pollen() >= shop_defender[defen_pro] and defen != defen_pro:
                 choice_board.sero(event.pos[0])
                 defen = defen_pro
+                pygame.mixer.music.load('data/tap.mp3')
+                pygame.mixer.music.play()
 
             elif defen == defen_pro and defen != None:
                 choice_board.sero(None)
@@ -925,6 +950,8 @@ while running:
             if board.get_click(event.pos, defen):
                 choice_board.buy_za_pollen(shop_defender[defen])
                 choice_board.sero(None)
+                pygame.mixer.music.load('data/plant.mp3')
+                pygame.mixer.music.play()
                 defen = None
 
         elif event.type == pygame.KEYDOWN:
@@ -932,8 +959,29 @@ while running:
                 stop = True
             if event.key == pygame.K_DOWN:
                 stop = False
+                pygame.mixer.music.load('data/pause.mp3')
+                pygame.mixer.music.play()
+            if event.key == pygame.K_q:
+                monsters[-1].kill()
+
 
     if stop:
+        # спавн
+        if cd_zom_sp <= 0:
+            if kol_waves > 0:
+                pygame.mixer.music.load('data/awooga.mp3')
+                pygame.mixer.music.play()
+                sp = {"Нормально": 10, "Сложно": 20}
+                f = 7
+                for i in range(sp[diffic]):
+                    monster_spavn()
+                kol_waves -= 1
+                cd_zom_sp = 300
+        if kol_waves == 0 and monsters == []:
+            win = True
+            break
+        cd_zom_sp -= zom_sp
+
         # ход монстров
         for i in monsters:
             if i not in all_sprites:
@@ -1009,9 +1057,16 @@ while running:
     pygame.display.flip()
     clock.tick(FPS)
 
-if over:
+if over or win:
     sprite = pygame.sprite.Sprite()
-    sprite.image = pygame.transform.scale(load_image("game.jpg"), (500, 400))
+    if over:
+        sprite.image = pygame.transform.scale(load_image("game.jpg"), (500, 400))
+        pygame.mixer.music.load('data/scream.mp3')
+        pygame.mixer.music.play()
+    else:
+        sprite.image = pygame.transform.scale(load_image("logo.png", -1), (500, 400))
+        pygame.mixer.music.load('data/finalfanfare.mp3')
+        pygame.mixer.music.play()
     sprite.rect = sprite.image.get_rect()
     end_game.add(sprite)
     sprite.rect.x = -500
