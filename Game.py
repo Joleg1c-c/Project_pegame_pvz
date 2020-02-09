@@ -1000,7 +1000,7 @@ while running:
             if kol_waves > 0:
                 pygame.mixer.music.load('data/awooga.mp3')
                 pygame.mixer.music.play()
-                sp = {"Нормально": 10, "Сложно": 20}
+                sp = {"Нормально": 5, "Сложно": 10}
                 f = 7
                 for i in range(sp[diffic]):
                     monster_spavn()
