@@ -1093,7 +1093,7 @@ if over or win:
         pygame.mixer.music.load('data/scream.mp3')
         pygame.mixer.music.play()
     else:
-        sprite.image = pygame.transform.scale(load_image("logo.png", -1), (500, 400))
+        sprite.image = pygame.transform.scale(load_image("win.jpg", -1), (500, 400))
         pygame.mixer.music.load('data/finalfanfare.mp3')
         pygame.mixer.music.play()
     sprite.rect = sprite.image.get_rect()
