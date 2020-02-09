@@ -587,8 +587,7 @@ class Help:
 
     def render(self):
         # карта
-        screen.blit(pygame.transform.scale(load_image("fon.jpg"), (width - self.left * 2, height - self.top * 2)),
-                    (self.left, self.top))
+        screen.blit(load_image("проверка1.bmp"), (self.left, self.top))
 
         # обьяснение
         font = pygame.font.Font(None, 70)
@@ -882,6 +881,7 @@ while choice_diff:
     clock.tick(FPS)
 
 # проверка на то, запускается ли эта игра впервые
+# запускает сюжет
 if int(take_snach[5]) == 0 and running:
     perezapic = open('text/settings.txt', 'w', encoding='utf8')
     perezapic.write("FPS = {}\nSTART = {}".format(take_snach[2], 1))
@@ -897,6 +897,8 @@ if int(take_snach[5]) == 0 and running:
                 sys.exit()
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 Fail = False
+        if x < -664:
+            Fail = False
         screen.fill((0, 0, 0))
         screen.blit(load_image("s1200 (2) — копия.jpg"), (0, x))
         x -= 0.3
