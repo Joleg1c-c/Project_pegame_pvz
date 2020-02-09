@@ -2,6 +2,7 @@ import pygame
 import sys
 import os
 import random
+import time
 
 # берёт значения FPS из текставого файла
 take_snach = open("text/settings.txt", encoding='utf8').read().split()
@@ -44,7 +45,8 @@ class Monster(pygame.sprite.Sprite):
         self.now_hit = 0
         self.image_list_move = image[0]
         self.image_list_hit = image[1]
-        self.image = pygame.transform.scale(load_image(self.image_list_move[self.now % 4], -1), (hero_width, hero_height))
+        self.image = pygame.transform.scale(load_image(self.image_list_move[self.now % 4], -1),
+                                            (hero_width, hero_height))
         self.stand_x = tile_left + tile_width * pos_x + 10
         self.stand_y = tile_top + tile_height * pos_y + 10
 
@@ -787,6 +789,7 @@ start_glav_menu, start_help = True, False
 running_menu = True
 running = False
 choice_diff = False
+helper = False
 while running_menu:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -884,7 +887,7 @@ while choice_diff:
 # запускает сюжет
 if int(take_snach[5]) == 0 and running:
     perezapic = open('text/settings.txt', 'w', encoding='utf8')
-    perezapic.write("FPS = {}\nSTART = {}".format(take_snach[2], 1))
+    perezapic.write("FPS = {}\nSTART = {}".format(take_snach[2], 0))
     perezapic.close()
     Fail = True
     x = height
@@ -897,14 +900,39 @@ if int(take_snach[5]) == 0 and running:
                 sys.exit()
             elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 Fail = False
+                helper = True
         if x < -664:
             Fail = False
-        screen.fill((0, 0, 0))
+            helper = True
+
         screen.blit(load_image("s1200 (2) — копия.jpg"), (0, x))
         x -= 0.3
 
         pygame.display.flip()
         clock.tick(FPS)
+
+# если игра запускается впервые, то запускается подсказка
+while helper:
+    screen.fill((0, 0, 0))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+            helper = False
+    screen.blit(load_image("проверка1.bmp"), (0, height / 2 - 247 // 2))
+
+    # подсказка
+    font = pygame.font.Font(None, 60)
+    text = font.render("Подсказка как играть", 1, (255, 255, 255))
+    screen.blit(text, (5, 10))
+
+    font = pygame.font.Font(None, 40)
+    text = font.render("нажмите любую клавишу", 1, (255, 255, 255))
+    screen.blit(text, (10, 350))
+
+    pygame.display.flip()
+    clock.tick(FPS)
 
 # стоимость защитников
 shop_defender = {None: 10000, "defender_standart": 4, "defender_pollen_given": 2, "defender_stend": 2, "potions": 0,
@@ -914,8 +942,6 @@ shop_defender = {None: 10000, "defender_standart": 4, "defender_pollen_given": 2
 defenders = []
 bullets = []
 monsters = []
-
-
 
 # настройки спавна зомби
 cd_zom_sp = 100
@@ -967,7 +993,6 @@ while running:
                 pygame.mixer.music.play()
             if event.key == pygame.K_q:
                 monsters[-1].kill()
-
 
     if stop:
         # спавн

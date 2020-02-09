@@ -1,2 +1,2 @@
 FPS = 60
-START = 1
+START = 0
