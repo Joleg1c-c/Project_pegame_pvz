@@ -787,6 +787,7 @@ help.set_view(10, 70)
 start_glav_menu, start_help = True, False
 running_menu = True
 running = False
+choice_diff = False
 while running_menu:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -804,6 +805,7 @@ while running_menu:
                 elif board_menu.what(kto_menu) == "Играть":
                     sound1.play()
                     running_menu = False
+                    choice_diff = True
                     running = True
 
                 elif board_menu.what(kto_menu) == "Помощь":
@@ -849,11 +851,11 @@ while running_menu:
 Diff = Difficult(2)
 Diff.set_view(10, 100, 100)
 diffic = "Нормально"
-choice_diff = True
 while choice_diff:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             choice_diff = False
+            running = False
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             kto_menu = Diff.get_click(event.pos)
