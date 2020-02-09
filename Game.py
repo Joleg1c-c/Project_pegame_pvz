@@ -887,7 +887,7 @@ while choice_diff:
 # запускает сюжет
 if int(take_snach[5]) == 0 and running:
     perezapic = open('text/settings.txt', 'w', encoding='utf8')
-    perezapic.write("FPS = {}\nSTART = {}".format(take_snach[2], 0))
+    perezapic.write("FPS = {}\nSTART = {}".format(take_snach[2], 1))
     perezapic.close()
     Fail = True
     x = height
